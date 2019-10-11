@@ -7,6 +7,7 @@ import userModel from'./module-user/models/userModel';
 import mongoose from 'mongoose';
 import userRoutes from './module-user/routes/userRoutes'
 import customerRoutes from './module-customer/routes/customerRoutes';
+import productRoutes from './module-product/routes/productRoutes';
 
 class Server{
     public app: Application;
@@ -26,6 +27,7 @@ class Server{
     private routes():void{
         this.app.use('/api/users/', userRoutes);
         this.app.use('/api/customers/', customerRoutes);
+        this.app.use('/api/products/', productRoutes);
     }
     public start():void{
         this.app.listen(this.app.get('port'), () => {
@@ -35,7 +37,6 @@ class Server{
     private connectDB():void{
         mongoose.connect(`${process.env.DB_LOCAL}`)
        .then(() => {
-            new userModel();
             console.error('Database connection success');
        })
        .catch(err => {
