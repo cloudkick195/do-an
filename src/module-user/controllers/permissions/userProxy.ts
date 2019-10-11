@@ -91,9 +91,11 @@ class UserProxy {
             }
             const query = req.query;
             const users = query && query.offset && query.limit
-                        ? await userModel.find({}).skip(+query.offset).limit(+query.limit) 
-                        :await userModel.find({}).sort({ _id: -1 });
-            res.json({ success: true, users: users});
+                        ?  userModel.find({}).skip(+query.offset).limit(+query.limit) 
+                        : userModel.find({}).sort({ _id: -1 });
+            const count = userModel.countDocuments();
+            const result = await Promise.all([users, count]);
+            res.json({ success: true, users: result[0], total: result[1] || 0 } );
             /* if(this._UserPermissions()[getPermission+'']['getListUser']){
                 const query = req.query;
                 const users = query && query.offset && query.limit

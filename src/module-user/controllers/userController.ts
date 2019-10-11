@@ -109,8 +109,10 @@ class UserController{
                 } else if (!user.active) {
                     res.send({ success: false, message: 'Account is not yet activated. Please check your email for activation link', expired: true });
                 } else {
-                    const token = jwt.sign({ userName: user.userName, email: user.email }, this.secret, { expiresIn: '24h' });
+                    const token = jwt.sign({ userName: user.userName, email: user.email }, this.secret, { expiresIn: 7200 });
                     user.password = undefined;
+                    user.expires_at = 7200;
+                    user.active = undefined;
                     res.send({ success: true, message: 'User authenticated!', token: token, user:user  });
                 }
             }else{
