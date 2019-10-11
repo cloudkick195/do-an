@@ -100,7 +100,7 @@ class UserController{
             res.send({ success: false, message:  validateArray});
         }else{
             const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
-            user = await userModel.findOne(findParams).select('email userName password active');
+            user = await userModel.findOne(findParams).select('email userName password active firstName lastName gender birthDay phone');
             
             if (user) {
                 const validPassword = user.comparePassword(req.body.password);
@@ -111,9 +111,19 @@ class UserController{
                 } else {
                     const token = jwt.sign({ userName: user.userName, email: user.email }, this.secret, { expiresIn: 7200 });
                     user.password = undefined;
-                    user.expires_at = 7200;
                     user.active = undefined;
-                    res.send({ success: true, message: 'User authenticated!', token: token, user:user  });
+
+                    const userInfo = {
+                        userName: user.userName,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        gender: user.gender,
+                        birthDay: user.birthDay,
+                        phone: user.phone,
+                        expires_at: 7200
+                    }
+                    res.send({ success: true, message: 'User authenticated!', token: token, user:userInfo  });
                 }
             }else{
                 res.send({ success: false, message: 'No Username or Email found' });
