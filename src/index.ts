@@ -33,7 +33,7 @@ class Server{
         })
     }
     private connectDB():void{
-        mongoose.connect(`${process.env.DB_LOCAL}`)
+        mongoose.connect(`mongodb://root:123456qq@ds233288.mlab.com:33288/anhhoang`)
        .then(() => {
             new userModel();
             console.error('Database connection success');
