@@ -66,11 +66,13 @@ class productController{
         }).array("imgUploader", 1); //Field name and max count
 
         upload(req, res, function(err) {
+            console.log(req.files);
+            
             if (err) {
-                return res.send({success: false, message:"Something went wrong!"});
+                return res.send({success: false, message: err});
             }   
             
-            return res.send({success: true, image: req.files[0].filename})
+            return res.send({success: true, image: '/images'+req.files[0].filename})
         });
         
     }
