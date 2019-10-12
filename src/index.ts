@@ -24,6 +24,7 @@ class Server{
         this.app.use(morgan('dev'));
         this.app.use(cors());
         this.app.use(express.json());
+        this.app.use(express.urlencoded({extended: false}));
         this.app.use(express.static('./'));
     }
     private routes():void{
@@ -39,7 +40,7 @@ class Server{
         })
     }
     private connectDB():void{
-        mongoose.connect(`${process.env.DB_LOCAL}`)
+        mongoose.connect(`mongodb://root:123456qq@ds233288.mlab.com:33288/anhhoang`)
        .then(() => {
             console.error('Database connection success');
        })

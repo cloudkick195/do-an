@@ -1,8 +1,8 @@
-import { Request, Response, response, request } from 'express';
+import { Request, Response } from 'express';
 import userModel from '../../models/userModel';
-import { isEmpty, isEmail, matches } from 'validator';
+import { isEmail, matches } from 'validator';
 import userValidator from '../../controllers/userValidator';
-import { ObjectID } from 'bson';
+import { Constants } from '../../../common/constants/constants';
 class UserProxy {
     private readonly secret:string = 'cloudkick';
 
@@ -62,9 +62,9 @@ class UserProxy {
             throw err;
         }
     }
-    private _findUser = async (req: any, res: Response): Promise<void>=>{
+    private _findUser = async (req: any, res: Response): Promise<any>=>{
         try {
-            const mainUser:any = await userModel.findOne({userName: 'nhathoang'});
+            const mainUser:any = await userModel.findOne({userName: req.decoded.userName});
             if (mainUser) {
                 return mainUser;
             } else {
@@ -77,49 +77,35 @@ class UserProxy {
 
     }
     
+    private __trimKeyword(keyword: string) {
+        let search = keyword;
+        //remove space in head and tail
+        search = search.trim();
+        //relace mutiple space -> |
+        search = search.replace(/ /gi, "|");
+        search = search.replace(/\|\|\|/gi, '|');
+        search = search.replace(/\|\|/gi, '|');
+
+        return search;
+    }
+
     public getListUser = async (req: any, res: Response): Promise<any> =>{
         try {
-
             const query = req.query;
-            let page = 1;
-            let limit = 25;
-            let s = {}
-            let users;
-            let count;
-            if(query){
-                if(query.s){
-                    let search = query.s;
-                    //remove space in head and tail
-                    search = search.trim();
-                    //relace mutiple space -> |
-                    search = search.replace(/ /gi, "|");
-                    search = search.replace(/\|\|\|/gi, '|');
-                    search = search.replace(/\|\|/gi, '|');
-                    
-                    //find mutiple word
-                    s = {userName: new RegExp('('+search+')', "i")}
-                    //((?!).)*?('+search+').*? => find cau trong doan, vd dinh nhat trong dinh nhat hoang
-                }
-                if(query.page){
-                    page = query.page;
-                }
-                if(query.limit){
-                    limit = query.limit;
-                }
-                const offset = (page - 1) * limit
-                users = userModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
-                count = userModel.count(s);
-           }else{
-                users = userModel.find(s).limit(limit).sort({ _id: -1 });
-                count = userModel.countDocuments();
-           }
-           
-           const result = await Promise.all([users, count]);
-           if(result[0].length > 0){
-                return res.json({ success: true, users: result[0], total: result[1]});
+            let page = parseInt(query.page) || 1;
+            let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
+            let offset = (page * limit) - limit;
+            let keyword: string = query.q || null;
+            let s = {};
+            if(keyword) {
+                keyword = this.__trimKeyword(keyword);
+                s = { userName: new RegExp('('+ keyword +')', "i") };
             }
-            return res.json({ success: false, message: "Some error occurred while retrieving user."});
-            
+            const users: any = userModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
+            const count: any = userModel.count(s);
+            const result = await Promise.all([users, count]);
+
+            return res.json({ success: true, users: result[0], total: result[1]});
         } catch (err) {
             return res.json({ success: false, message: "Some error occurred while retrieving user."});
         }
@@ -127,8 +113,6 @@ class UserProxy {
 
     public getUser = async (req: any, res: Response): Promise<any> =>{
         try {
-            console.log(2);
-            
             const mainUser:any = await this._findUser(req, res);
             const getPermission = mainUser.permission;
             const getUser = await userModel.findOne({ userName: req.params.userName });
@@ -140,9 +124,8 @@ class UserProxy {
                 return res.send({ success: false, message: 'Permission denied' });
             }
            
-            const count = userModel.countDocuments();
-            const result = await Promise.all([getUser, count]);
-            res.json({ success: true, users: result[0], total: result[1] || 0 } );
+            const count = await userModel.countDocuments();
+            res.json({ success: true, users: getUser, total: count || 0 } );
             /* if(this._UserPermissions()[getPermission+'']['getListUser']){
                 const query = req.query;
                 const users = query && query.offset && query.limit
@@ -184,7 +167,7 @@ class UserProxy {
                 return res.send({ success: false, message: 'Permission denied' });
             }
 
-            const user = await userModel.findOneAndRemove({ username: req.params.username });
+            const user = await userModel.findOneAndRemove({ username: req.params.userName });
             if(user){
                 return res.json({ success: true, message: 'Delete User Successful' });
             }
@@ -374,9 +357,7 @@ class UserProxy {
             }
         };
 
-
-        const childrenRoleHasAccess = permisson[userLoginedRole].child;
-        return !!childrenRoleHasAccess[userEditRole];
+        return permisson[userLoginedRole] && !!permisson[userLoginedRole].child[userEditRole];
     }
 
 }

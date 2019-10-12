@@ -25,12 +25,13 @@ class UserRoutes{
     }
 
     configManager():void{
+        this.router.post('/register', userControllers.createUser);
         this.router.post('/me', userControllers.postMe);
         this.router.post('/register', userProxy.createUser);
         this.router.get('/', userProxy.getListUser);
         this.router.get('/:userName', userProxy.getUser);
         this.router.get('/permisson', userProxy.getPermission);
-        this.router.delete('/management/:username', userProxy.deleteUser);
+        this.router.delete('/management/:userName', userProxy.deleteUser);
         this.router.put('/edit', userProxy.putUser);
         
     }

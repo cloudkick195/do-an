@@ -30,7 +30,7 @@ class UserModel{
             creationDate: { type: Date, default: Date.now },
             temporarytoken: { type: String, required: false },
             resettoken: { type: String, required: false },
-            permission: { type: String, required: true, enum: ['super_admin', 'admin', 'post_manager'], default: 'post_manager' },
+            permission: { type: String, required: true, enum: ['super_admin', 'admin', 'normal'], default: 'normal' },
             active: {type: Boolean, required: true, default: false}
             
         });
