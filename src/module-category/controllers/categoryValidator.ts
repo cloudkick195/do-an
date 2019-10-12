@@ -1,12 +1,9 @@
 import { isEmpty, isEmail, matches } from 'validator';
-class  ProductValidator{
+class  CategoryValidator{
     private userMessage: object;
     constructor() {
         this.userMessage = {
-            'titleRequired': 'The title is missing',
-            'categorySlugRequired': 'The category slug is missing',
-            'userRequired': 'The userId is missing',
-            'inventoryRequired': 'The inventory is missing'
+            'titleRequired': 'The title is missing'
         }
     }
 
@@ -24,4 +21,4 @@ class  ProductValidator{
     }
 }
 
-export default new ProductValidator()
+export default new CategoryValidator()

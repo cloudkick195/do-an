@@ -11,7 +11,7 @@ interface Attribute{
 interface IProduct{
     title: string;
     content?: string;
-    categoryId: number,
+    categorySlug: string,
     image?: string,
     user: string,
     slug?: string,

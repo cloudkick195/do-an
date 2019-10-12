@@ -9,18 +9,19 @@ class ProductRoutes{
     }
     config():void{
         
-        this.configproduct();
-        //this.router.use(userController.checkToken);
+        this.configProduct();
+        this.router.use(userController.checkToken);
         this.configManager();
     }
 
-    configproduct():void{
+    configProduct():void{
 
     }
 
     configManager():void{
         this.router.post('/create', productControllers.createProduct);
         this.router.get('/', productControllers.getListProduct);
+        this.router.get('/:slug', productControllers.getProductBySlug);
         this.router.delete('/:productname', productControllers.deleteProduct);
         this.router.put('/:employeeId', productControllers.putProduct);
         

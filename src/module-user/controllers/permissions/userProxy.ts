@@ -64,7 +64,7 @@ class UserProxy {
     }
     private _findUser = async (req: any, res: Response): Promise<void>=>{
         try {
-            const mainUser:any = await userModel.findOne({userName: req.decoded.userName});
+            const mainUser:any = await userModel.findOne({userName: 'nhathoang'});
             if (mainUser) {
                 return mainUser;
             } else {
@@ -79,6 +79,56 @@ class UserProxy {
     
     public getListUser = async (req: any, res: Response): Promise<any> =>{
         try {
+
+            const query = req.query;
+            let page = 1;
+            let limit = 25;
+            let s = {}
+            let users;
+            let count;
+            if(query){
+                if(query.s){
+                    let search = query.s;
+                    //remove space in head and tail
+                    search = search.trim();
+                    //relace mutiple space -> |
+                    search = search.replace(/ /gi, "|");
+                    search = search.replace(/\|\|\|/gi, '|');
+                    search = search.replace(/\|\|/gi, '|');
+                    
+                    //find mutiple word
+                    s = {userName: new RegExp('('+search+')', "i")}
+                    //((?!).)*?('+search+').*? => find cau trong doan, vd dinh nhat trong dinh nhat hoang
+                }
+                if(query.page){
+                    page = query.page;
+                }
+                if(query.limit){
+                    limit = query.limit;
+                }
+                const offset = (page - 1) * limit
+                users = userModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
+                count = userModel.count(s);
+           }else{
+                users = userModel.find(s).limit(limit).sort({ _id: -1 });
+                count = userModel.countDocuments();
+           }
+           
+           const result = await Promise.all([users, count]);
+           if(result[0].length > 0){
+                return res.json({ success: true, users: result[0], total: result[1]});
+            }
+            return res.json({ success: false, message: "Some error occurred while retrieving user."});
+            
+        } catch (err) {
+            return res.json({ success: false, message: "Some error occurred while retrieving user."});
+        }
+    }
+
+    public getUser = async (req: any, res: Response): Promise<any> =>{
+        try {
+            console.log(2);
+            
             const mainUser:any = await this._findUser(req, res);
             const getPermission = mainUser.permission;
             const getUser = await userModel.findOne({ userName: req.params.userName });
@@ -89,12 +139,9 @@ class UserProxy {
                 && ( mainUser.userName !== getUser.userName)) {
                 return res.send({ success: false, message: 'Permission denied' });
             }
-            const query = req.query;
-            const users = query && query.offset && query.limit
-                        ?  userModel.find({}).skip(+query.offset).limit(+query.limit) 
-                        : userModel.find({}).sort({ _id: -1 });
+           
             const count = userModel.countDocuments();
-            const result = await Promise.all([users, count]);
+            const result = await Promise.all([getUser, count]);
             res.json({ success: true, users: result[0], total: result[1] || 0 } );
             /* if(this._UserPermissions()[getPermission+'']['getListUser']){
                 const query = req.query;
@@ -139,10 +186,9 @@ class UserProxy {
 
             const user = await userModel.findOneAndRemove({ username: req.params.username });
             if(user){
-                return res.json({ success: false, message: 'Something went wrong.'});
-            }else{
                 return res.json({ success: true, message: 'Delete User Successful' });
             }
+            return res.json({ success: true, message: 'User not found' });
 /*             const getPermissionAction = this._UserPermissions()[getPermission+''];
             if(getPermissionAction['deletuserModel']){
                 const user = await userModel.findOneAndRemove({ username: req.params.username });
