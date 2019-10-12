@@ -29,7 +29,7 @@ class CategoryController{
                     image: image
                 });
                 await category.save();
-                return res.send({success: true, message: "Create Success" });
+                return res.send({success: true, message: "Create Success", data: category });
             }
         } catch (err) {
             return res.send({success: false, message: err.message });

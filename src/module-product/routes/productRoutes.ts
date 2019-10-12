@@ -1,5 +1,7 @@
 import {Router} from 'express';
 import productControllers from '../controllers/productController';
+import userController from '../../module-user/controllers/userController';
+import { authMiddlware } from '../../middlewares/auth.middleware';
 
 class ProductRoutes{
     router: Router = Router();
@@ -10,7 +12,7 @@ class ProductRoutes{
     config():void{
         
         this.configProduct();
-        //this.router.use(userController.checkToken);
+        this.router.use(authMiddlware);
         this.configManager();
     }
 

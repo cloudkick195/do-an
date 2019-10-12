@@ -16,8 +16,9 @@ import { Constants } from '../../common/constants/constants';
 class productController{
     private secret:string = 'cloudkick';
     
-    public createProduct = async (req: Request, res:  Response): Promise<any>=> {
-        const {title, slug, image, content, categoryId, userId, price, priceSale, inventory, attribute} = req.body;
+    public createProduct = async (req: any, res:  Response): Promise<any> => {
+        const {title, slug, image, content, categoryId, price, priceSale, inventory, attribute} = req.body;
+        const userId = req.user._id;
         
         try {
             const validateArray = productValidator.validateParamsArray({ title, categoryId, userId, inventory });
@@ -44,7 +45,7 @@ class productController{
                     attribute: attribute,
                 });
                 await product.save();
-                return res.send({success: true, message: "Create Success" });
+                return res.send({success: true, message: "Create Success", data: product });
             }
         } catch (err) {
             return res.send({success: false, message: err.message });
@@ -125,9 +126,10 @@ class productController{
         }
     }
     
-    public putProduct = async (req: Request, res: Response): Promise<any> =>{
+    public putProduct = async (req: any, res: Response): Promise<any> =>{
         try {
-            const {title, slug, content, categoryId, userId, image, price, priceSale, inventory, attribute} = req.body;
+            const {title, slug, content, categoryId, image, price, priceSale, inventory, attribute} = req.body;
+            const userId = req.user._id;
             const product = await productModel.findById(req.params.id);
             
             if(product){
@@ -152,7 +154,7 @@ class productController{
                     product.inventory = inventory;
                     product.attribute = attribute;
                     await product.save();
-                    return res.send({success: true, message: "Update Success" });
+                    return res.send({success: true, message: "Update Success", data: product });
                 }
             }else{
                 return res.send({success: false, message: "Update failed" });
