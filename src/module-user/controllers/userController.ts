@@ -109,7 +109,7 @@ class UserController{
                 } else if (!user.active) {
                     res.send({ success: false, message: 'Account is not yet activated. Please check your email for activation link', expired: true });
                 } else {
-                    const token = jwt.sign({ userName: user.userName, email: user.email }, this.secret, { expiresIn: 7200 });
+                    const token = jwt.sign({ userName: user.userName, email: user.email }, this.secret, { expiresIn: 5 * 24 * 60 * 60 });
                     user.password = undefined;
                     user.active = undefined;
 
@@ -316,10 +316,10 @@ class UserController{
     }
 
     public checkToken = (req: any, res: Response, next:any):void => {
-        
-        const token = req.headers["x-access-token"] || req.headers["authorization"];
-        if(token){
-            jwt.verify(token, this.secret, function(err:any, decoded:any) {
+        const token: string = req.headers["x-access-token"] || req.headers["authorization"] || "";
+        const tokenHasSplited: Array<string> = token.split(" ");
+        if(token && tokenHasSplited.length > 1 && tokenHasSplited[0] == 'Bearer'){
+            jwt.verify(tokenHasSplited[1], this.secret, function(err:any, decoded:any) {
                 if(err){
                     res.send({success: false, message: 'token invalid'});
                 }else{
