@@ -12,6 +12,14 @@ class OrderModel{
         const OrderSchema =  new Schema({      
             customerId: { type: Schema.Types.ObjectId, ref: 'customers' },
             createDate: { type: Date, default: Date.now },
+            status: {type: String, required: true, enum: ['process', 'success', 'cancel'], default: 'process'},
+            shipping: {
+                typeShip: { type: String},
+                address: { type: String},
+                shipCost: { type: Number},
+                shipDate: { type: Date }
+            },
+            description: { type: Schema.Types.Mixed }
         });
         this._model = model<IOrderSchema>('orders', OrderSchema);        
     }
