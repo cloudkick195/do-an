@@ -10,7 +10,7 @@ class UserRoutes{
     config():void{
         
         this.configUser();
-        this.router.use(userControllers.checkToken);
+        //this.router.use(userControllers.checkToken);
         this.configManager();
     }
 
@@ -27,7 +27,8 @@ class UserRoutes{
     configManager():void{
         this.router.post('/me', userControllers.postMe);
         this.router.post('/managementRegister', userProxy.createUser);
-        this.router.get('/management', userProxy.getListUser);
+        this.router.get('/', userProxy.getListUser);
+        this.router.get('/:userName', userProxy.getUser);
         this.router.get('/permisson', userProxy.getPermission);
         this.router.delete('/management/:username', userProxy.deleteUser);
         this.router.put('/edit', userProxy.putUser);

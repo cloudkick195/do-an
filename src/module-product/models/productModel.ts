@@ -14,7 +14,7 @@ class productModel{
             title: { type: String, required: true},
             slug: { type: String, required: true, unique: true},
             content: { type: Schema.Types.Mixed },
-            categoryId: { type: Number, required: true },
+            categorySlug: { type: Number, required: true },
             user: { type: String, required: true },
             image: { type: String },
             price: {type: Number},

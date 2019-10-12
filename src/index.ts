@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import userRoutes from './module-user/routes/userRoutes'
 import customerRoutes from './module-customer/routes/customerRoutes';
 import productRoutes from './module-product/routes/productRoutes';
+import categoryRoutes from './module-category/routes/categoryRoutes';
 
 class Server{
     public app: Application;
@@ -28,6 +29,7 @@ class Server{
         this.app.use('/api/users/', userRoutes);
         this.app.use('/api/customers/', customerRoutes);
         this.app.use('/api/products/', productRoutes);
+        this.app.use('/api/categories/', categoryRoutes);
     }
     public start():void{
         this.app.listen(this.app.get('port'), () => {
