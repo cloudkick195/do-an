@@ -42,7 +42,10 @@ class OrderController{
 
     public getOrderById = async (req: any, res: Response): Promise<any> =>{
         try {
-            const order = await orderDetailModel.findOne({orderId: req.params.id}).populate('orderId');
+            const order = await orderDetailModel.findOne({orderId: req.params.id})
+            .populate({
+                path: 'items'
+            });
             if(order){
                 return res.send({success: true, Order: order }); 
             }
