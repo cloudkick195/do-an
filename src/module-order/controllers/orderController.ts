@@ -44,7 +44,8 @@ class OrderController{
         try {
             const order = await orderDetailModel.findOne({orderId: req.params.id})
             .populate({
-                path: 'items'
+                path: 'items',
+                populate: {path: 'productId'}
             });
             if(order){
                 return res.send({success: true, Order: order }); 

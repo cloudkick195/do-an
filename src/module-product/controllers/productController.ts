@@ -72,7 +72,7 @@ class productController{
                 return res.send({success: false, message: err});
             }   
             
-            return res.send({success: true, image: '/images'+req.files[0].filename})
+            return res.send({success: true, image: '/images/'+req.files[0].filename})
         });
         
     }
