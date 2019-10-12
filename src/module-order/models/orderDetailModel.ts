@@ -13,37 +13,21 @@ enum status{
     CANCEL = 'cancel',
 }
 declare interface IOrderDetailSchema extends Document{
-    items: Array<item>;
+    productId: Schema.Types.ObjectId;
     orderId: Schema.Types.ObjectId;
-    status: status;
-    shipping?:{
-        typeShip: string;
-        address: string;
-        shipCost: number;
-        shipDate: Date
-    }
-    description?: string;
+    qty: number;
+    discount?: number,
 }
 
 class OrderDetailModel{
     private _model: Model<IOrderDetailSchema>;
     constructor(){
-        const itemSchema = new Schema({
+        
+        const orderDetailSchema =  new Schema({
             productId: {type: Schema.Types.ObjectId, ref: 'products', required: true},  
             qty:{type: Number, required: true},
-            description: {type: String},
-        }, { _id: false })
-        const orderDetailSchema =  new Schema({
-            items: { type: [itemSchema], required: true},
             orderId: {type: Schema.Types.ObjectId, ref: 'orders' },
-            status: {type: String, required: true, enum: ['process', 'success', 'cancel'], default: 'process'},
-            shipping: {
-                typeShip: { type: String},
-                address: { type: String},
-                shipCost: { type: Number},
-                shipDate: { type: Date }
-            },
-            description: { type: Schema.Types.Mixed },
+            discount: {type: Number},
         });
         this._model = model<IOrderDetailSchema>('orderDetail', orderDetailSchema);        
     }

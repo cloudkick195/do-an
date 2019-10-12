@@ -22,7 +22,7 @@ class OrderRoutes{
         this.router.post('/create', orderControllers.createOrder);
         this.router.get('/', orderControllers.getListOrder);
         this.router.get('/:id', orderControllers.getOrderById);
-        this.router.delete('/:Ordername', orderControllers.deleteOrder);
+        //this.router.delete('/:Ordername', orderControllers.deleteOrder);
         this.router.put('/:id', orderControllers.putOrder);
         
     }

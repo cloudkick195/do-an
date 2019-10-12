@@ -16,23 +16,32 @@ class OrderController{
                 return res.send({success: false, message: "There are no items in the order" });
             }
             const validateArray = orderValidator.validateParamsArray({ customerId, status, orderDetail });
-
             if(validateArray.length > 0) {
                 return res.send({ success: false, message:  validateArray});
             }else{
                 const orderObject= new orderModel({
-                    customerId: customerId
-                });
-                const order = await orderObject.save();
-                const orderDetailitems = new orderDetailModel({
-                    items: orderDetail,
-                    orderId: order._id,
+                    customerId: customerId,
                     description: description,
                     shipping: shipping,
                     status: status
-                })
-                orderDetailitems.save();    
+                });
+                const order = await orderObject.save();
+                let listItem: any = [];
                 
+                orderDetail.map((item :any) => {
+                    if(!listItem[item.productId]){
+                        item.orderId = order._id
+                        listItem[item.productId] = item
+                    }else{
+                        listItem[item.productId] = {...item, qty: item.qty + listItem[item.productId].qty}
+                    }
+                });
+                let listOrders: Array<any> = [];
+                Object.keys(listItem).map((item: any) => {
+                    listOrders.push(listItem[item]);
+                });
+                
+                await orderDetailModel.insertMany(listOrders);  
                 return res.send({success: true, message: "Create Success" });
             }
         } catch (err) {
@@ -42,11 +51,8 @@ class OrderController{
 
     public getOrderById = async (req: any, res: Response): Promise<any> =>{
         try {
-            const order = await orderDetailModel.findOne({orderId: req.params.id})
-            .populate({
-                path: 'items',
-                populate: {path: 'productId'}
-            });
+            const order = await orderDetailModel.findOne({orderId: req.params.id}).populate('productId').populate('orderId');
+            
             if(order){
                 return res.send({success: true, Order: order }); 
             }
@@ -86,7 +92,7 @@ class OrderController{
             }
             
             const offset = (page - 1) * limit
-            orders = orderModel.find(s).skip(offset).limit(limit).sort({ _id: -1 }).populate('categoryId');
+            orders = orderModel.find(s).skip(offset).limit(limit).sort({ _id: -1 }).populate('productId').populate('orderId');
             count = orderModel.count(s);
             
            const result = await Promise.all([orders, count]);
@@ -104,31 +110,29 @@ class OrderController{
         try {
             const {customerId, description, shipping, status, orderDetail} = req.body;
             
-            const orderDetailmodel = await orderDetailModel.findOne({orderId: req.params.id});
-            
-            if(orderDetailmodel){
                 const validateArray = orderValidator.validateParamsArray({ status, orderDetail });
                 if(validateArray.length > 0) {
                     return res.send({ success: false, message:  validateArray});
                 }else{
-                    if(shipping){
-                        orderDetailmodel.shipping = shipping;
+                    let ordermodel = await orderModel.findById(req.params.id);
+                   
+                    if(ordermodel){
+                        ordermodel.shipping = shipping;
+                        ordermodel.description = description;
+                        ordermodel.status = status;
+                   
+                        ordermodel.save();
+                        return res.send({success: true, message: "Update Success" });
                     }
-                    orderDetailmodel.description= description;
-                    orderDetailmodel.status = status;
-                    orderDetailmodel.items = orderDetail; 
-                    orderDetailmodel.save();
-                    return res.send({success: true, message: "Update Success" });
+                    return res.send({success: false, message: "Update failed" });
                 }
-            }
-            return res.send({success: false, message: "Update failed" });
             
         } catch (err) {
             return res.send({success: false, message: err.message });
         }
     }
 
-    public deleteOrder = async (req: any, res: Response): Promise<any> =>{
+/*     public deleteOrder = async (req: any, res: Response): Promise<any> =>{
         try {
             const order = await orderModel.findOneAndRemove(req.params.id);
             if(order){
@@ -140,7 +144,7 @@ class OrderController{
             res.json({ success: false, message: err.message});
             throw err;
         }
-    }
+    } */
    
 }
 

@@ -25,7 +25,7 @@ class ProductRoutes{
         this.router.post('/Upload', productControllers.uploadImage);
         this.router.get('/', productControllers.getListProduct);
         this.router.get('/:slug', productControllers.getProductBySlug);
-        this.router.delete('/:productname', productControllers.deleteProduct);
+        this.router.delete('/:id', productControllers.deleteProduct);
         this.router.put('/:id', productControllers.putProduct);
         
     }
