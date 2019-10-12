@@ -4,8 +4,8 @@ class  ProductValidator{
     constructor() {
         this.userMessage = {
             'titleRequired': 'The title is missing',
-            'categorySlugRequired': 'The category slug is missing',
-            'userRequired': 'The userId is missing',
+            'categoryIdRequired': 'The category slug is missing',
+            'userIdRequired': 'The user is missing',
             'inventoryRequired': 'The inventory is missing'
         }
     }

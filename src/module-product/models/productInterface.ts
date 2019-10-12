@@ -1,4 +1,5 @@
 import Schema from 'mongoose';
+import { ObjectId } from 'bson';
 enum inventory{
     INSTOCK = 'instock',
     OUTSTOCK = 'outstock' 
@@ -11,9 +12,9 @@ interface Attribute{
 interface IProduct{
     title: string;
     content?: string;
-    categorySlug: string,
+    categoryId: Schema.Types.ObjectId,
     image?: string,
-    user: string,
+    userId: Schema.Types.ObjectId,
     slug?: string,
     price?: number,
     priceSale?: number,

@@ -11,8 +11,7 @@ class CategoryController{
     private secret:string = 'cloudkick';
 
     public createCategory = async (req: Request, res:  Response): Promise<any>=> {
-        const {title, slug, content, categorySlug, user, image} = req.body;
-        
+        const {title, slug, content, image} = req.body;
         try {
             const validateArray = categoryValidator.validateParamsArray({ title });
             let getSlug = title;
@@ -28,13 +27,13 @@ class CategoryController{
                     title:  title,
                     slug: slugConvert,
                     content: content,
-                    image: image,
+                    image: image
                 });
                 await category.save();
                 return res.send({success: true, message: "Create Success" });
             }
         } catch (err) {
-            return res.json({ success: false, message: err.message});
+            return res.send({success: false, message: err.message });
         }
     }
 
@@ -45,21 +44,15 @@ class CategoryController{
             let limit = 25;
             let products:any;
             let count;
-            if(query){
-                if(query.page){
-                    page = query.page;
-                }
-                if(query.limit){
-                    limit = query.limit;
-                }
-                const offset = (page - 1) * limit;
-                products = productModel.findOne({slug: req.params.slug}).skip(offset).limit(limit).sort({ _id: -1 });
-                
-            }else{
-                products = productModel.findOne({slug: req.params.slug}).limit(limit).sort({ _id: -1 });
-
+            if(query.page){
+                page = query.page;
             }
-            count = categoryModel.count({slug: req.params.slug});
+            if(query.limit){
+                limit = query.limit;
+            }
+            const offset = (page - 1) * limit;
+            products = productModel.find({categorySlug: req.params.slug}).skip(offset).limit(limit).sort({ _id: -1 });
+            count = productModel.count({slug: req.params.slug});
             const result = await Promise.all([products, count]);
             
             if(result[0].length > 0){
@@ -81,7 +74,6 @@ class CategoryController{
         } catch (err) {
             return res.json({ success: false, message: err.message});
         }
-
     }
     
     public getListCategory = async (req: any, res: Response): Promise<any> =>{
@@ -134,7 +126,7 @@ class CategoryController{
     
     public putCategory = async (req: Request, res: Response): Promise<any> =>{
         try {
-            const {title, slug, content, categorySlug, user, image} = req.body;
+            const {title, slug, content, image} = req.body;
             const category = await categoryModel.findById(req.params.id);
             
             if(category){
@@ -155,9 +147,9 @@ class CategoryController{
                     await category.save();
                     return res.send({success: true, message: "Update Success" });
                 }
+            }else{
+                return res.send({success: false, message: "Update failed" });
             }
-            return res.send({success: false, message: "Update failed" });
-            
         } catch (err) {
             return res.send({success: false, message: err.message });
         }
@@ -165,13 +157,14 @@ class CategoryController{
 
     public deleteCategory = async (req: any, res: Response): Promise<any> =>{
         try {
-            const category = await categoryModel.findOneAndRemove({ slug: req.params.id });
+            const category = await categoryModel.findOneAndRemove(req.params.id);
             if(category){
                 return res.json({ success: true, message: 'Delete category Successful' });
             }
             return res.json({ success: true, message: 'Category not found' });
+            
         } catch (err) {
-            res.json({ success: false, message: 'Something went wrong.'});
+            res.json({ success: false, message: err.message});
             throw err;
         }
     }

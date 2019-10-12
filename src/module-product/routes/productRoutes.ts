@@ -10,7 +10,7 @@ class ProductRoutes{
     config():void{
         
         this.configProduct();
-        this.router.use(userController.checkToken);
+        //this.router.use(userController.checkToken);
         this.configManager();
     }
 
@@ -23,7 +23,7 @@ class ProductRoutes{
         this.router.get('/', productControllers.getListProduct);
         this.router.get('/:slug', productControllers.getProductBySlug);
         this.router.delete('/:productname', productControllers.deleteProduct);
-        this.router.put('/:employeeId', productControllers.putProduct);
+        this.router.put('/:id', productControllers.putProduct);
         
     }
 }

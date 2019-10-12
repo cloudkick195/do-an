@@ -16,6 +16,7 @@ class ProductRoutes{
 
     configproduct():void{
         this.router.get('/:slug', categoryControllers.getCategoryBySlug);
+        this.router.get('/:slug/products', categoryControllers.getListProductByCategory);
     }
 
     configManager():void{
