@@ -6,11 +6,12 @@ import database from '../../database';
 import { promises } from 'dns';
 import nodemailer from 'nodemailer';
 import "dotenv/config";
-import customerValidator from './customerValidator';
-class CustomerController{
+import customerValidator from '../controllers/customerValidator';
+class customerController{
     private secret:string = 'cloudkick';
     public createcustomer = (req: Request, res:  Response) => {
         const {userName, firstName, lastName, password, confirmPassword, email, birthDay, gender} = req.body;
+        
         
         try {
             
@@ -19,8 +20,9 @@ class CustomerController{
             if(validateArray.length > 0) {
                 res.send({ success: false, message:  validateArray});
             }else{
+                
                 if(matches(userName, /^([a-zA-Z0-9]{3,20})+$/) === false){
-                    res.send({success: false, message: "userName Must be at least 3 characters, max 20, no special characters, length 3->20"});
+                    res.send({success: false, message: "customername Must be at least 3 characters, max 20, no special characters, length 3->20"});
                 }else if(!isEmail(email)){
                     res.send({success: false, message: "The Email is invalid"});
                 }else if(matches(password, /^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d])(?=.*?[\W]).{8,35}$/) === false){
@@ -28,6 +30,7 @@ class CustomerController{
                 }else if(confirmPassword !== password){
                     res.send({success: false, message: "Password confirmation does not match password"});
                 }else{
+                    
                     const customer = new customerModel({
                         userName: userName,
                         firstName: firstName,
@@ -38,6 +41,8 @@ class CustomerController{
                         gender: gender,
                         temporarytoken: jwt.sign({ userName: userName, email: email }, this.secret, { expiresIn: 300 })
                     });
+                   
+                    
                     customer.save()
                     
                     .then(customer => {
@@ -52,25 +57,12 @@ class CustomerController{
                         
                         const client = this.getCreateTransport();
                         // Function to send e-mail to the customer
-                        client.sendMail(email).then((info: any) => {
+                        client.sendMail(email).then( info => {
                             console.log('Message sent: %s', info);
-                        }).catch((err: any) => {
+                        }).catch(err => {
                             console.log(err);
                         });
                         res.send({ success: true, message: 'Account registered! Please check your e-mail for activation link.' });
-                    })
-                    .catch((err:any) => {
-                        if(err){
-                            if (err.code == 11000) {
-                                if (err.errmsg[62] == "u") {
-                                    res.send({success: false, message: "The userName is already taken"});
-                                } else if(err.errmsg[62] == "e") {
-                                    res.send({success: false, message: "That E-mail is already taken"});
-                                }
-                            }else{
-                                res.send({success: false, message:err });
-                            }
-                        }
                     });
                 }
             }
@@ -81,27 +73,27 @@ class CustomerController{
 
     private getCreateTransport(){
         return nodemailer.createTransport({
-            host: "smtp.gmail.com",
+            host: 'smtp.gmail.com',
             port: 587,
             secure: false, // upgrade later with STARTTLS
             auth: {
                 user: 'cloudkick195@gmail.com',
                 pass: 'eomaimcneqiequxh'
             }
-            
         });
     }
 
     public authenticate = async (req: Request, res: Response): Promise<void> => {
-        const { password, logincustomer } = req.body;
+        const { password, loginUser } = req.body;
         let customer: any;
-        const validateArray = customerValidator.validateParamsArray({ password, logincustomer });
+        const validateArray = customerValidator.validateParamsArray({ password, loginUser });
+        
         
         if(validateArray.length > 0) {
             res.send({ success: false, message:  validateArray});
         }else{
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { userName: logincustomer };
-            customer = await customerModel.findOne(findParams).select('email userName password active');
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
+            customer = await customerModel.findOne(findParams).select('email userName password active firstName lastName gender birthDay phone');
             
             if (customer) {
                 const validPassword = customer.comparePassword(req.body.password);
@@ -110,12 +102,24 @@ class CustomerController{
                 } else if (!customer.active) {
                     res.send({ success: false, message: 'Account is not yet activated. Please check your email for activation link', expired: true });
                 } else {
-                    const token = jwt.sign({ userName: customer.userName, email: customer.email }, this.secret, { expiresIn: '24h' });
+                    const token = jwt.sign({ userName: customer.userName, email: customer.email }, this.secret, { expiresIn: 5 * 24 * 60 * 60 });
                     customer.password = undefined;
-                    res.send({ success: true, message: 'customer authenticated!', token: token, customer:customer  });
+                    customer.active = undefined;
+
+                    const customerInfo = {
+                        userName: customer.userName,
+                        email: customer.email,
+                        firstName: customer.firstName,
+                        lastName: customer.lastName,
+                        gender: customer.gender,
+                        birthDay: customer.birthDay,
+                        phone: customer.phone,
+                        expires_at: 7200
+                    }
+                    res.send({ success: true, message: 'customer authenticated!', token: token, customer:customerInfo  });
                 }
             }else{
-                res.send({ success: false, message: 'No userName or Email found' });
+                res.send({ success: false, message: 'No customername or Email found' });
             }
         }
     }
@@ -178,8 +182,8 @@ class CustomerController{
 
     public putResend = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const { logincustomer } = req.body;
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { userName: logincustomer };
+            const { loginUser } = req.body;
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
             const customer = await customerModel.findOne(findParams).select('email userName password temporarytoken active');
             
             if(customer){
@@ -193,14 +197,14 @@ class CustomerController{
                         to: [customer.email],
                         subject: 'KingBuild, Your Resend Link in 5 minutes time',
                         text: 'Hello ' + customer.userName + ', You recently requested a new account activation link. Please click on the following link to complete your activation: '+ `${process.env.SEVER_LINK}`+'/api/customers/activate/' ,
-                        html: 'Hello<strong> ' + customer.userName + '</strong>,<br><br>You recently requested a new account activation link. Please click on the link below to complete your activation:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/activate/' + customer.userName + '/token/' + customer.temporarytoken + '">http://localhost/activate/</a> in 5 minutes time'
+                        html: 'Hello<strong> ' + customer.userName + '</strong>,<br><br>You recently requested a new account activation link. Please click on the link below to complete your activation:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/token/' + customer.temporarytoken + '">http://localhost/token/</a> in 5 minutes time'
                     };
     
                     const client = this.getCreateTransport();
                     // Function to send e-mail to the customer
-                    client.sendMail(email).then( (info: any) => {
+                    client.sendMail(email).then( info => {
                         console.log('Message sent: %s', info);
-                    }).catch((err: any) => {
+                    }).catch(err => {
                         console.log(err);
                     });
                     res.send({ success: true, message: 'Resend Activation link has been sent to ' + customer.email + '!' });
@@ -215,8 +219,8 @@ class CustomerController{
 
     public resetPassword = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const { logincustomer } = req.body;
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { userName: logincustomer };
+            const { loginUser } = req.body;
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
             const customer = await customerModel.findOne(findParams).select('email userName password active');
             if (customer) {
                 if (customer.active) {
@@ -226,16 +230,16 @@ class CustomerController{
                         from: 'KingBuild, tetst@gmail.com',
                         to: [customer.email],
                         subject: 'KingBuild, Reset Password Request',
-                        text: 'You recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/reset/' + customer.resettoken,
-                        html: 'you recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/reset/' + customer.resettoken + '">http://localhost/reset/</a>'
+                        text: 'You recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/resetpassword/' + customer.resettoken,
+                        html: 'you recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/resetpassword/' + customer.resettoken + '">http://localhost/reset/</a>'
                             
                     };
     
                     const client = this.getCreateTransport();
                     // Function to send e-mail to the customer
-                    client.sendMail(email).then( (info: any) => {
+                    client.sendMail(email).then( info => {
                         console.log('Message sent: %s', info);
-                    }).catch((err: any) => {
+                    }).catch(err => {
                         console.log(err);
                     });
                     res.send({ success: true, message: 'Reset Password link has been sent to ' + customer.email + '!' });
@@ -268,7 +272,7 @@ class CustomerController{
 
     public savePassword = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const customer = await customerModel.findOne({ userName: req.body.userName }).select('userName email name password resettoken');
+            const customer = await customerModel.findOne({ userName: req.body.loginUser }).select('customername email name password resettoken');
             if (customer) {
                 if (isEmpty(req.body.password)) {
                     res.send({ success: false, message: 'Password not provided' });
@@ -288,9 +292,9 @@ class CustomerController{
     
                     const client = this.getCreateTransport();
                     // Function to send e-mail to the customer
-                    client.sendMail(email).then( (info: any) => {
+                    client.sendMail(email).then( info => {
                         console.log('Message sent: %s', info);
-                    }).catch((err: any) => {
+                    }).catch(err => {
                         console.log(err);
                     });
                     res.send({ success: true, message: 'Password has been reset!' });
@@ -305,10 +309,10 @@ class CustomerController{
     }
 
     public checkToken = (req: any, res: Response, next:any):void => {
-        
-        const token = req.headers["x-access-token"] || req.headers["authorization"];
-        if(token){
-            jwt.verify(token, this.secret, function(err:any, decoded:any) {
+        const token: string = req.headers["x-access-token"] || req.headers["authorization"] || "";
+        const tokenHasSplited: Array<string> = token.split(" ");
+        if(token && tokenHasSplited.length > 1 && tokenHasSplited[0] == 'Bearer'){
+            jwt.verify(tokenHasSplited[1], this.secret, function(err:any, decoded:any) {
                 if(err){
                     res.send({success: false, message: 'token invalid'});
                 }else{
@@ -331,4 +335,4 @@ class CustomerController{
    
 }
 
-export default new CustomerController();
+export default new customerController();

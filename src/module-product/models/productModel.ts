@@ -6,7 +6,7 @@ declare interface IproductSchema extends IProduct, Document{
     
 }
 
-class productModel{
+class ProductModel{
     private _model: Model<IproductSchema>;
 
     constructor(){
@@ -31,4 +31,4 @@ class productModel{
     }
 }
 
-export default new productModel().model;
+export default new ProductModel().model;

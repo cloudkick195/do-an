@@ -10,7 +10,7 @@ class ProductRoutes{
     config():void{
         
         this.configproduct();
-        //this.router.use(userController.checkToken);
+        this.router.use(userController.checkToken);
         this.configManager();
     }
 

@@ -9,6 +9,7 @@ import userRoutes from './module-user/routes/userRoutes'
 import customerRoutes from './module-customer/routes/customerRoutes';
 import productRoutes from './module-product/routes/productRoutes';
 import categoryRoutes from './module-category/routes/categoryRoutes';
+import orderRoutes from './module-order/routes/orderRoutes';
 
 class Server{
     public app: Application;
@@ -30,6 +31,7 @@ class Server{
         this.app.use('/api/customers/', customerRoutes);
         this.app.use('/api/products/', productRoutes);
         this.app.use('/api/categories/', categoryRoutes);
+        this.app.use('/api/orders/', orderRoutes);
     }
     public start():void{
         this.app.listen(this.app.get('port'), () => {
@@ -37,7 +39,7 @@ class Server{
         })
     }
     private connectDB():void{
-        mongoose.connect(`mongodb://root:123456qq@ds233288.mlab.com:33288/anhhoang`)
+        mongoose.connect(`${process.env.DB_LOCAL}`)
        .then(() => {
             console.error('Database connection success');
        })

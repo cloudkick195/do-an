@@ -1,5 +1,6 @@
 import {Router} from 'express';
 import customerControllers from '../controllers/customerController';
+import userControllers from '../../module-user/controllers/userController';
 
 class customerRoutes{
     router: Router = Router();
@@ -9,7 +10,7 @@ class customerRoutes{
     config():void{
         
         this.configcustomer();
-        this.router.use(customerControllers.checkToken);
+        //this.router.use(customerControllers.checkToken);
         this.configManager();
     }
 
@@ -20,13 +21,12 @@ class customerRoutes{
         this.router.put('/resend', customerControllers.putResend);
         this.router.put('/resetpassword', customerControllers.resetPassword);
         this.router.put('/savepassword', customerControllers.savePassword);
-        this.router.put('/token/:token', customerControllers.activate);
+        this.router.get('/token/:token', customerControllers.activate);
+        this.router.get('/resetpassword/:token', customerControllers.getTokenPassword);
     }
 
     configManager():void{
         this.router.post('/me', customerControllers.postMe);
-        /* this.router.put('/edit', customerProxy.putcustomer); */
-        
     }
 }
 

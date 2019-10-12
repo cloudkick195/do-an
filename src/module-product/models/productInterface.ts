@@ -15,7 +15,7 @@ interface IProduct{
     categoryId: Schema.Types.ObjectId,
     image?: string,
     userId: Schema.Types.ObjectId,
-    slug?: string,
+    slug: string,
     price?: number,
     priceSale?: number,
     inventory: inventory,

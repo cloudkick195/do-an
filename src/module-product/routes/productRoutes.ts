@@ -20,6 +20,7 @@ class ProductRoutes{
 
     configManager():void{
         this.router.post('/create', productControllers.createProduct);
+        this.router.post('/Upload', productControllers.uploadImage);
         this.router.get('/', productControllers.getListProduct);
         this.router.get('/:slug', productControllers.getProductBySlug);
         this.router.delete('/:productname', productControllers.deleteProduct);

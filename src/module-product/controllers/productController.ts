@@ -3,13 +3,22 @@ import productModel from '../models/productModel';
 import productValidator from './productValidator';
 import slugHelper from '../../includes/helper/slug-helper'
 import "dotenv/config";
+import { promises } from 'fs';
+import { Schema } from 'mongoose';
+import { ObjectId } from 'bson';
+import { isEmpty } from 'validator';
+import {Router} from "express";
+import multer from 'multer';
+import fs from 'fs';
+import formidable from 'formidable';
 import { Constants } from '../../common/constants/constants';
 
 class productController{
     private secret:string = 'cloudkick';
     
     public createProduct = async (req: Request, res:  Response): Promise<any>=> {
-        const {title, slug, content, categoryId, userId, image, price, priceSale, inventory, attribute} = req.body;
+        const {title, slug, image, content, categoryId, userId, price, priceSale, inventory, attribute} = req.body;
+        
         try {
             const validateArray = productValidator.validateParamsArray({ title, categoryId, userId, inventory });
             let getSlug = title;
@@ -21,6 +30,7 @@ class productController{
             if(validateArray.length > 0) {
                 return res.send({ success: false, message:  validateArray});
             }else{
+                
                 const product = new productModel({
                     title:  title,
                     slug: slugConvert,
@@ -39,6 +49,30 @@ class productController{
         } catch (err) {
             return res.send({success: false, message: err.message });
         }
+    }
+
+    public uploadImage = (req: any, res:  Response):any=> {
+        const Storage = multer.diskStorage({
+            destination: function(req, file, callback) {
+                callback(null, "./images");
+            },
+            filename: function(req, file, callback) {
+                callback(null, + Date.now() + "-" + slugHelper.ChangeToSlugFile(file.originalname));
+            }
+        });
+
+        const upload = multer({
+            storage: Storage
+        }).array("imgUploader", 1); //Field name and max count
+
+        upload(req, res, function(err) {
+            if (err) {
+                return res.send({success: false, message:"Something went wrong!"});
+            }   
+            
+            return res.send({success: true, image: req.files[0].filename})
+        });
+        
     }
 
     public getProductBySlug = async (req: any, res: Response): Promise<any> =>{
