@@ -4,8 +4,7 @@ import productModel from '../../module-product/models/productModel';
 import categoryValidator from './categoryValidator';
 import slugHelper from '../../includes/helper/slug-helper'
 import "dotenv/config";
-import { promises } from 'fs';
-import { ObjectID, ObjectId } from 'bson';
+import { Constants } from '../../common/constants/constants';
 
 class CategoryController{
     private secret:string = 'cloudkick';
@@ -70,55 +69,42 @@ class CategoryController{
             if(category){
                 return res.send({success: true, category: category }); 
             }
-            return res.send({success: false, message: "category not found" }); 
+            return res.status(404).send({success: false, message: "category not found" }); 
         } catch (err) {
             return res.json({ success: false, message: err.message});
         }
     }
     
+    private __trimKeyword(keyword: string) {
+        let search = keyword;
+        //remove space in head and tail
+        search = search.trim();
+        //relace mutiple space -> |
+        search = search.replace(/ /gi, "|");
+        search = search.replace(/\|\|\|/gi, '|');
+        search = search.replace(/\|\|/gi, '|');
+
+        return search;
+    }
+
     public getListCategory = async (req: any, res: Response): Promise<any> =>{
         try {
             const query = req.query;
-            let page = 1;
-            let limit = 25;
-            let s = {}
-            let categorys;
-            let count;
+            let page = parseInt(query.page) || 1;
+            let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
+            let offset = (page * limit) - limit;
+            let keyword: string = query.q || null;
+            let s = {};
+            // Check empty keyword
+            if(keyword) {
+                keyword = this.__trimKeyword(keyword);
+                s = { userName: new RegExp('('+ keyword +')', "i") };
+            }
+            const categorys = categoryModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
+            const count = categoryModel.count(s);
+            const result = await Promise.all([categorys, count]);
 
-            if(query){
-                if(query.s){
-                    let search = query.s;
-                    //remove space in head and tail
-                    search = search.trim();
-                    //relace mutiple space -> |
-                    search = search.replace(/ /gi, "|");
-                    search = search.replace(/\|\|\|/gi, '|');
-                    search = search.replace(/\|\|/gi, '|');
-                    
-                    //find mutiple word
-                    s = {title: new RegExp('('+search+')', "i")}
-                    //((?!).)*?('+search+').*? => find cau trong doan, vd dinh nhat trong dinh nhat hoang
-                }
-                if(query.page){
-                    page = query.page;
-                }
-                if(query.limit){
-                    limit = query.limit;
-                }
-                const offset = (page - 1) * limit
-                categorys = categoryModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
-                count = categoryModel.count(s);
-           }else{
-                categorys = categoryModel.find(s).limit(limit).sort({ _id: -1 });
-                count = categoryModel.countDocuments();
-           }
-
-           
-           const result = await Promise.all([categorys, count]);
-           if(result[0].length > 0){
-               return res.json({ success: true, categories: result[0], total: result[1]});
-           }
-           return res.json({ success: false, message: "Some error occurred while retrieving category."});
+            return res.json({ success: true, categories: result[0], total: result[1]});
         } catch (err) {
             return res.json({ success: false, message: err.message});
         }

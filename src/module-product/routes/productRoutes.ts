@@ -1,9 +1,9 @@
 import {Router} from 'express';
 import productControllers from '../controllers/productController';
-import userController from '../../module-user/controllers/userController';
 
 class ProductRoutes{
     router: Router = Router();
+
     constructor(){
         this.config();
     }
