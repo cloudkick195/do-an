@@ -10,12 +10,15 @@ import { isEmpty } from 'validator';
 import {Router} from "express";
 import multer from 'multer';
 import fs from 'fs';
+import formidable from 'formidable';
 
 class productController{
     private secret:string = 'cloudkick';
-    private imageUploader = multer({ dest: 'images/' }); // (**)
+
     public createProduct = async (req: Request, res:  Response): Promise<any>=> {
-        const {title, slug, content, categoryId, userId, image, price, priceSale, inventory, attribute} = req.body;
+        const {title, slug, content, categoryId, userId, price, priceSale, inventory, attribute} = req.body;
+        console.log(req.body);
+        
         try {
             const validateArray = productValidator.validateParamsArray({ title, categoryId, userId, inventory });
             let getSlug = title;
@@ -27,6 +30,7 @@ class productController{
             if(validateArray.length > 0) {
                 return res.send({ success: false, message:  validateArray});
             }else{
+                const image = await this.uploadImage(req, res);
                 const product = new productModel({
                     title:  title,
                     slug: slugConvert,
@@ -39,7 +43,6 @@ class productController{
                     inventory: inventory,
                     attribute: attribute,
                 });
-                //this.uploadImage(image)
                 await product.save();
                 return res.send({success: true, message: "Create Success" });
             }
@@ -48,23 +51,29 @@ class productController{
         }
     }
 
-    public getImage = async (req: Request, res:  Response): Promise<any>=> {
-        const image = await this.uploadImage();
-        if(image){
-            res.send({image: req.file});
-        }
-    }
-
-    private uploadImage = async () => {
-        const storage = multer.diskStorage({
-            destination: function(req, file, callback){
-                callback(null, './uploads');
+    private uploadImage = (req: any, res:  Response):any=> {
+        
+        const Storage = multer.diskStorage({
+            destination: function(req, file, callback) {
+                callback(null, "./images");
             },
             filename: function(req, file, callback) {
-                callback(null, file.originalname);
+                callback(null, + Date.now() + "-" + slugHelper.ChangeToSlugFile(file.originalname));
             }
-        })
-        return await multer({ storage: storage }).single('myfile');
+        });
+
+        const upload = multer({
+            storage: Storage
+        }).array("imgUploader", 1); //Field name and max count
+
+        upload(req, res, function(err) {
+            if (err) {
+                return res.send("Something went wrong!");
+            }   
+            
+            return req.files[0].filename;
+        });
+        
     }
 
     public getProductBySlug = async (req: any, res: Response): Promise<any> =>{
