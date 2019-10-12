@@ -3,10 +3,9 @@ class  OrderValidator{
     private userMessage: object;
     constructor() {
         this.userMessage = {
-            'titleRequired': 'The title is missing',
-            'categoryIdRequired': 'The category slug is missing',
-            'userIdRequired': 'The user is missing',
-            'inventoryRequired': 'The inventory is missing'
+            'customerIdRequired': 'The title is missing',
+            'statusRequired': 'The status is missing',
+            'orderDetailRequired': 'The orderDetail is missing'
         }
     }
 

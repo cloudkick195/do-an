@@ -4,7 +4,6 @@ interface ICategory{
     title: string;
     content?: string;
     image?: string,
-    user: string,
     slug?: string,
 }
 

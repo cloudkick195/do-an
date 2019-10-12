@@ -21,7 +21,8 @@ class customerRoutes{
         this.router.put('/resend', customerControllers.putResend);
         this.router.put('/resetpassword', customerControllers.resetPassword);
         this.router.put('/savepassword', customerControllers.savePassword);
-        this.router.put('/token/:token', customerControllers.activate);
+        this.router.get('/token/:token', customerControllers.activate);
+        this.router.get('/resetpassword/:token', customerControllers.getTokenPassword);
     }
 
     configManager():void{

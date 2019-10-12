@@ -3,7 +3,7 @@ class  customerValidator{
     private customerMessage: object;
     constructor() {
         this.customerMessage = {
-            'customerNameRequired': 'The customername is missing',
+            'loginUserRequired': 'The login is missing',
             'firstNameRequired': 'The firstName is missing',
             'lastNameRequired': 'The lastName is missing',
             'emailRequired': 'The Email is missing',

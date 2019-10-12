@@ -13,7 +13,7 @@ class customerModel{
 
     constructor(){
         const customerSchema =  new Schema({
-            customerName: { type: String, required: true, unique: true },
+            userName: { type: String, required: true, unique: true },
             firstName: { type: String, required: true },
             lastName: { type: String, required: true },
             birthDay: { type: Date, required: true },

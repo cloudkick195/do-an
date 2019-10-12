@@ -12,6 +12,7 @@ class customerController{
     public createcustomer = (req: Request, res:  Response) => {
         const {userName, firstName, lastName, password, confirmPassword, email, birthDay, gender} = req.body;
         
+        
         try {
             
             const validateArray = customerValidator.validateParamsArray({ userName, firstName, lastName, password, confirmPassword, email, birthDay, gender });
@@ -19,6 +20,7 @@ class customerController{
             if(validateArray.length > 0) {
                 res.send({ success: false, message:  validateArray});
             }else{
+                
                 if(matches(userName, /^([a-zA-Z0-9]{3,20})+$/) === false){
                     res.send({success: false, message: "customername Must be at least 3 characters, max 20, no special characters, length 3->20"});
                 }else if(!isEmail(email)){
@@ -28,6 +30,7 @@ class customerController{
                 }else if(confirmPassword !== password){
                     res.send({success: false, message: "Password confirmation does not match password"});
                 }else{
+                    
                     const customer = new customerModel({
                         userName: userName,
                         firstName: firstName,
@@ -38,6 +41,8 @@ class customerController{
                         gender: gender,
                         temporarytoken: jwt.sign({ userName: userName, email: email }, this.secret, { expiresIn: 300 })
                     });
+                   
+                    
                     customer.save()
                     
                     .then(customer => {
@@ -58,19 +63,6 @@ class customerController{
                             console.log(err);
                         });
                         res.send({ success: true, message: 'Account registered! Please check your e-mail for activation link.' });
-                    })
-                    .catch((err:any) => {
-                        if(err){
-                            if (err.code == 11000) {
-                                if (err.errmsg[62] == "u") {
-                                    res.send({success: false, message: "The customername is already taken"});
-                                } else if(err.errmsg[62] == "e") {
-                                    res.send({success: false, message: "That E-mail is already taken"});
-                                }
-                            }else{
-                                res.send({success: false, message:err });
-                            }
-                        }
                     });
                 }
             }
@@ -92,15 +84,16 @@ class customerController{
     }
 
     public authenticate = async (req: Request, res: Response): Promise<void> => {
-        const { password, logincustomer } = req.body;
+        const { password, loginUser } = req.body;
         let customer: any;
-        const validateArray = customerValidator.validateParamsArray({ password, logincustomer });
+        const validateArray = customerValidator.validateParamsArray({ password, loginUser });
+        
         
         if(validateArray.length > 0) {
             res.send({ success: false, message:  validateArray});
         }else{
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { customerName: logincustomer };
-            customer = await customerModel.findOne(findParams).select('email customerName password active firstName lastName gender birthDay phone');
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
+            customer = await customerModel.findOne(findParams).select('email userName password active firstName lastName gender birthDay phone');
             
             if (customer) {
                 const validPassword = customer.comparePassword(req.body.password);
@@ -109,12 +102,12 @@ class customerController{
                 } else if (!customer.active) {
                     res.send({ success: false, message: 'Account is not yet activated. Please check your email for activation link', expired: true });
                 } else {
-                    const token = jwt.sign({ customerName: customer.customerName, email: customer.email }, this.secret, { expiresIn: 5 * 24 * 60 * 60 });
+                    const token = jwt.sign({ userName: customer.userName, email: customer.email }, this.secret, { expiresIn: 5 * 24 * 60 * 60 });
                     customer.password = undefined;
                     customer.active = undefined;
 
                     const customerInfo = {
-                        customerName: customer.customerName,
+                        userName: customer.userName,
                         email: customer.email,
                         firstName: customer.firstName,
                         lastName: customer.lastName,
@@ -133,7 +126,7 @@ class customerController{
 
     public activate = async (req: Request, res: Response): Promise<void> =>{
         try {
-            let customer = await customerModel.findOne({temporarytoken: req.params.token}).select('email customerName password temporarytoken active');
+            let customer = await customerModel.findOne({temporarytoken: req.params.token}).select('email userName password temporarytoken active');
             if(customer){
                 if(customer.active === false){
                     jwt.verify(req.params.token, this.secret);
@@ -165,8 +158,8 @@ class customerController{
 
     public postResend = async (req: Request, res: Response): Promise<void> =>{
         const { password, logincustomer } = req.body;
-        const findParams = isEmail(logincustomer) ? { email: logincustomer } : { customerName: logincustomer };
-        const customer = await customerModel.findOne(findParams).select('email customerName password active');
+        const findParams = isEmail(logincustomer) ? { email: logincustomer } : { userName: logincustomer };
+        const customer = await customerModel.findOne(findParams).select('email userName password active');
         
         if(customer){
             if (password) {
@@ -189,22 +182,22 @@ class customerController{
 
     public putResend = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const { logincustomer } = req.body;
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { customerName: logincustomer };
-            const customer = await customerModel.findOne(findParams).select('email customerName password temporarytoken active');
+            const { loginUser } = req.body;
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
+            const customer = await customerModel.findOne(findParams).select('email userName password temporarytoken active');
             
             if(customer){
                 if (customer.active) {
                     res.send({ success: false, message: 'Account is already activated.' }); // Account is already activated
                 } else {
-                    customer.temporarytoken = jwt.sign({ customerName: customer.userName, email: customer.email }, this.secret, { expiresIn: 300 });
+                    customer.temporarytoken = jwt.sign({ userName: customer.userName, email: customer.email }, this.secret, { expiresIn: 300 });
                     await customer.save(); 
                     const email = {
                         from: 'KingBuild, tetst@gmail.com',
                         to: [customer.email],
                         subject: 'KingBuild, Your Resend Link in 5 minutes time',
                         text: 'Hello ' + customer.userName + ', You recently requested a new account activation link. Please click on the following link to complete your activation: '+ `${process.env.SEVER_LINK}`+'/api/customers/activate/' ,
-                        html: 'Hello<strong> ' + customer.userName + '</strong>,<br><br>You recently requested a new account activation link. Please click on the link below to complete your activation:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/activate/' + customer.userName + '/token/' + customer.temporarytoken + '">http://localhost/activate/</a> in 5 minutes time'
+                        html: 'Hello<strong> ' + customer.userName + '</strong>,<br><br>You recently requested a new account activation link. Please click on the link below to complete your activation:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/token/' + customer.temporarytoken + '">http://localhost/token/</a> in 5 minutes time'
                     };
     
                     const client = this.getCreateTransport();
@@ -226,19 +219,19 @@ class customerController{
 
     public resetPassword = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const { logincustomer } = req.body;
-            const findParams = isEmail(logincustomer) ? { email: logincustomer } : { customerName: logincustomer };
-            const customer = await customerModel.findOne(findParams).select('email customerName password active');
+            const { loginUser } = req.body;
+            const findParams = isEmail(loginUser) ? { email: loginUser } : { userName: loginUser };
+            const customer = await customerModel.findOne(findParams).select('email userName password active');
             if (customer) {
                 if (customer.active) {
-                    customer.resettoken = jwt.sign({ customername: customer.userName, email: customer.email }, this.secret, { expiresIn: 300 });
+                    customer.resettoken = jwt.sign({ userName: customer.userName, email: customer.email }, this.secret, { expiresIn: 300 });
                     await customer.save(); 
                     const email = {
                         from: 'KingBuild, tetst@gmail.com',
                         to: [customer.email],
                         subject: 'KingBuild, Reset Password Request',
-                        text: 'You recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/reset/' + customer.resettoken,
-                        html: 'you recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/reset/' + customer.resettoken + '">http://localhost/reset/</a>'
+                        text: 'You recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/resetpassword/' + customer.resettoken,
+                        html: 'you recently request a password reset link. Please click on the link below to reset your password:<br><br><a href="'+ `${process.env.SEVER_LINK}`+'/api/customers/resetpassword/' + customer.resettoken + '">http://localhost/reset/</a>'
                             
                     };
     
@@ -279,7 +272,7 @@ class customerController{
 
     public savePassword = async (req: Request, res: Response): Promise<void> =>{
         try {
-            const customer = await customerModel.findOne({ customerName: req.body.customerName }).select('customername email name password resettoken');
+            const customer = await customerModel.findOne({ userName: req.body.loginUser }).select('customername email name password resettoken');
             if (customer) {
                 if (isEmpty(req.body.password)) {
                     res.send({ success: false, message: 'Password not provided' });

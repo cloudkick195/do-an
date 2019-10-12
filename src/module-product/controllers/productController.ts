@@ -16,8 +16,7 @@ class productController{
     private secret:string = 'cloudkick';
 
     public createProduct = async (req: Request, res:  Response): Promise<any>=> {
-        const {title, slug, content, categoryId, userId, price, priceSale, inventory, attribute} = req.body;
-        console.log(req.body);
+        const {title, slug, image, content, categoryId, userId, price, priceSale, inventory, attribute} = req.body;
         
         try {
             const validateArray = productValidator.validateParamsArray({ title, categoryId, userId, inventory });
@@ -30,7 +29,7 @@ class productController{
             if(validateArray.length > 0) {
                 return res.send({ success: false, message:  validateArray});
             }else{
-                const image = await this.uploadImage(req, res);
+                
                 const product = new productModel({
                     title:  title,
                     slug: slugConvert,
@@ -51,7 +50,7 @@ class productController{
         }
     }
 
-    private uploadImage = (req: any, res:  Response):any=> {
+    public uploadImage = (req: any, res:  Response):any=> {
         
         const Storage = multer.diskStorage({
             destination: function(req, file, callback) {
@@ -68,10 +67,10 @@ class productController{
 
         upload(req, res, function(err) {
             if (err) {
-                return res.send("Something went wrong!");
+                return res.send({success: false, message:"Something went wrong!"});
             }   
             
-            return req.files[0].filename;
+            return res.send({success: true, image: req.files[0].filename})
         });
         
     }

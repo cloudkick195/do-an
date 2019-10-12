@@ -9,19 +9,8 @@ declare interface IOrderSchema extends IOrder, Document{
 class OrderModel{
     private _model: Model<IOrderSchema>;
     constructor(){
-        const OrderSchema =  new Schema({
-            description: { type: Schema.Types.Mixed },
+        const OrderSchema =  new Schema({      
             customerId: { type: Schema.Types.ObjectId, ref: 'customers' },
-            userId: { type: Schema.Types.ObjectId, ref: 'users' },
-            status: {type: String, required: true, enum: ['process', 'success', 'cancel'], default: 'process'},
-            shipping: {
-                type: String,
-                address: String,
-                shipCost: Number,
-            },
-            OrderDetail: [   
-                { productId:{type: Schema.Types.ObjectId, ref: 'products'},  qty:{type: Number}, description: Schema.Types.Mixed}
-            ],
             createDate: { type: Date, default: Date.now },
         });
         this._model = model<IOrderSchema>('orders', OrderSchema);        

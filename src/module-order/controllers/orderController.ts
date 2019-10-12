@@ -1,33 +1,38 @@
 import { Request, Response } from 'express';
 import orderModel from '../models/OrderModel';
+import orderDetailModel from '../models/orderDetailModel';
 import orderValidator from './OrderValidator';
-import slugHelper from '../../includes/helper/slug-helper'
 import "dotenv/config";
-import { promises } from 'fs';
-import { Schema } from 'mongoose';
-import { ObjectId } from 'bson';
-import { isEmpty } from 'validator';
+
 
 class OrderController{
     private secret:string = 'cloudkick';
 
     public createOrder = async (req: Request, res:  Response): Promise<any>=> {
-        
-        const {customerId, description, shipping, status, orderDetail} = req.body;
         try {
+            const {customerId, description, shipping, status, orderDetail} = req.body;
+
+            if(!orderDetail[0]){
+                return res.send({success: false, message: "There are no items in the order" });
+            }
             const validateArray = orderValidator.validateParamsArray({ customerId, status, orderDetail });
 
             if(validateArray.length > 0) {
                 return res.send({ success: false, message:  validateArray});
             }else{
-                const order = new orderModel({
-                    customerId: customerId,
+                const orderObject= new orderModel({
+                    customerId: customerId
+                });
+                const order = await orderObject.save();
+                const orderDetailitems = new orderDetailModel({
+                    items: orderDetail,
+                    orderId: order._id,
                     description: description,
                     shipping: shipping,
-                    status: status,
-                    orderDetail: orderDetail
-                });
-                await order.save();
+                    status: status
+                })
+                orderDetailitems.save();    
+                
                 return res.send({success: true, message: "Create Success" });
             }
         } catch (err) {
@@ -37,7 +42,7 @@ class OrderController{
 
     public getOrderById = async (req: any, res: Response): Promise<any> =>{
         try {
-            const order = await orderModel.findById( req.params.id);
+            const order = await orderDetailModel.findOne({orderId: req.params.id}).populate('orderId');
             if(order){
                 return res.send({success: true, Order: order }); 
             }
@@ -95,22 +100,24 @@ class OrderController{
         try {
             const {customerId, description, shipping, status, orderDetail} = req.body;
             
-            const order = await orderModel.findById(req.params.id);
+            const orderDetailmodel = await orderDetailModel.findOne({orderId: req.params.id});
             
-            if(order){
-                const validateArray = orderValidator.validateParamsArray({ customerId, status, orderDetail });
+            if(orderDetailmodel){
+                const validateArray = orderValidator.validateParamsArray({ status, orderDetail });
                 if(validateArray.length > 0) {
                     return res.send({ success: false, message:  validateArray});
                 }else{
-                    order.description= description,
-                    order.status = status,
-                    order.orderDetail = orderDetail
-                    await order.save();
+                    if(shipping){
+                        orderDetailmodel.shipping = shipping;
+                    }
+                    orderDetailmodel.description= description;
+                    orderDetailmodel.status = status;
+                    orderDetailmodel.items = orderDetail; 
+                    orderDetailmodel.save();
                     return res.send({success: true, message: "Update Success" });
                 }
-            }else{
-                return res.send({success: false, message: "Update failed" });
             }
+            return res.send({success: false, message: "Update failed" });
             
         } catch (err) {
             return res.send({success: false, message: err.message });

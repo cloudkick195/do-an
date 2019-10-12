@@ -15,13 +15,12 @@ interface IOrder{
     createDate: Date,
     description?: string,
     shipping?:{
-        type:string,
+        typeShip:string,
         address: string,
         shipCost: number,
         shipDate: Date
     },
     status:status
-    orderDetail: Array<OrderDetail>
 }
 
 export default IOrder;
