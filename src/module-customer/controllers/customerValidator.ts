@@ -3,11 +3,11 @@ class  customerValidator{
     private customerMessage: object;
     constructor() {
         this.customerMessage = {
-            'userNameRequired': 'The userName is missing',
+            'customerNameRequired': 'The customername is missing',
             'firstNameRequired': 'The firstName is missing',
             'lastNameRequired': 'The lastName is missing',
             'emailRequired': 'The Email is missing',
-            'logincustomerRequired': 'No userName or Email provided',
+            'logincustomerRequired': 'No customername or Email provided',
             'passwordRequired': 'The Password is missing',
             'birthDayRequired': 'BirthDay is missing',
             'genderRequired': 'Gender is missing',

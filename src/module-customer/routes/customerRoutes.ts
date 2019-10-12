@@ -1,5 +1,6 @@
 import {Router} from 'express';
 import customerControllers from '../controllers/customerController';
+import userControllers from '../../module-user/controllers/userController';
 
 class customerRoutes{
     router: Router = Router();
@@ -9,7 +10,7 @@ class customerRoutes{
     config():void{
         
         this.configcustomer();
-        this.router.use(customerControllers.checkToken);
+        //this.router.use(customerControllers.checkToken);
         this.configManager();
     }
 
@@ -25,8 +26,6 @@ class customerRoutes{
 
     configManager():void{
         this.router.post('/me', customerControllers.postMe);
-        /* this.router.put('/edit', customerProxy.putcustomer); */
-        
     }
 }
 

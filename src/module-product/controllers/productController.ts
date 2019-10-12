@@ -7,10 +7,13 @@ import { promises } from 'fs';
 import { Schema } from 'mongoose';
 import { ObjectId } from 'bson';
 import { isEmpty } from 'validator';
+import {Router} from "express";
+import multer from 'multer';
+import fs from 'fs';
 
 class productController{
     private secret:string = 'cloudkick';
-
+    private imageUploader = multer({ dest: 'images/' }); // (**)
     public createProduct = async (req: Request, res:  Response): Promise<any>=> {
         const {title, slug, content, categoryId, userId, image, price, priceSale, inventory, attribute} = req.body;
         try {
@@ -36,12 +39,32 @@ class productController{
                     inventory: inventory,
                     attribute: attribute,
                 });
+                //this.uploadImage(image)
                 await product.save();
                 return res.send({success: true, message: "Create Success" });
             }
         } catch (err) {
             return res.send({success: false, message: err.message });
         }
+    }
+
+    public getImage = async (req: Request, res:  Response): Promise<any>=> {
+        const image = await this.uploadImage();
+        if(image){
+            res.send({image: req.file});
+        }
+    }
+
+    private uploadImage = async () => {
+        const storage = multer.diskStorage({
+            destination: function(req, file, callback){
+                callback(null, './uploads');
+            },
+            filename: function(req, file, callback) {
+                callback(null, file.originalname);
+            }
+        })
+        return await multer({ storage: storage }).single('myfile');
     }
 
     public getProductBySlug = async (req: any, res: Response): Promise<any> =>{
