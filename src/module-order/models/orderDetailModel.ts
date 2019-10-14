@@ -13,7 +13,7 @@ enum status{
     CANCEL = 'cancel',
 }
 declare interface IOrderDetailSchema extends Document{
-    productId: Schema.Types.ObjectId;
+    productId: Array<Schema.Types.ObjectId>;
     orderId: Schema.Types.ObjectId;
     qty: number;
 }
@@ -23,7 +23,7 @@ class OrderDetailModel{
     constructor(){
         
         const orderDetailSchema =  new Schema({
-            productId: {type: Schema.Types.ObjectId, ref: 'products', required: true},  
+            productId: [{type: Schema.Types.ObjectId, ref: 'products', required: true}],
             qty:{type: Number, required: true},
             orderId: {type: Schema.Types.ObjectId, ref: 'orders' }
         });
