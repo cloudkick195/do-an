@@ -29,6 +29,7 @@ class UserRoutes{
         this.router.post('/me', userControllers.postMe);
         this.router.post('/register', userProxy.createUser);
         this.router.get('/', userProxy.getListUser);
+        this.router.get('/customers/', userProxy.getListCustomer);
         this.router.get('/:userName', userProxy.getUser);
         this.router.get('/permisson', userProxy.getPermission);
         this.router.delete('/management/:userName', userProxy.deleteUser);

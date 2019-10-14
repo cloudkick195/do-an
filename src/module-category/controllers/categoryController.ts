@@ -93,7 +93,7 @@ class CategoryController{
             let page = parseInt(query.page) || 1;
             let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
             let offset = (page * limit) - limit;
-            let keyword: string = query.q || null;
+            let keyword: string = query.s || null;
             let s = {};
             // Check empty keyword
             if(keyword) {

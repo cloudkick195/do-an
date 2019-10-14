@@ -3,6 +3,7 @@ import userModel from '../../models/userModel';
 import { isEmail, matches } from 'validator';
 import userValidator from '../../controllers/userValidator';
 import { Constants } from '../../../common/constants/constants';
+import customerModel from '../../../module-customer/models/customerModel';
 class UserProxy {
     private readonly secret:string = 'cloudkick';
 
@@ -95,7 +96,7 @@ class UserProxy {
             let page = parseInt(query.page) || 1;
             let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
             let offset = (page * limit) - limit;
-            let keyword: string = query.q || null;
+            let keyword: string = query.s || null;
             let s = {};
             if(keyword) {
                 keyword = this.__trimKeyword(keyword);
@@ -103,6 +104,28 @@ class UserProxy {
             }
             const users: any = userModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
             const count: any = userModel.count(s);
+            const result = await Promise.all([users, count]);
+
+            return res.json({ success: true, users: result[0], total: result[1]});
+        } catch (err) {
+            return res.json({ success: false, message: "Some error occurred while retrieving user."});
+        }
+    }
+
+    public getListCustomer = async (req: any, res: Response): Promise<any> =>{
+        try {
+            const query = req.query;
+            let page = parseInt(query.page) || 1;
+            let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
+            let offset = (page * limit) - limit;
+            let keyword: string = query.s || null;
+            let s = {};
+            if(keyword) {
+                keyword = this.__trimKeyword(keyword);
+                s = { userName: new RegExp('('+ keyword +')', "i") };
+            }
+            const users: any = customerModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
+            const count: any = customerModel.count(s);
             const result = await Promise.all([users, count]);
 
             return res.json({ success: true, users: result[0], total: result[1]});
