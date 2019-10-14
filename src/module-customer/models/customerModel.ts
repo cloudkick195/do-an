@@ -27,6 +27,7 @@ class customerModel{
             active: {type: Boolean, required: true, default: false}
             
         });
+        //customerSchema.set("toJSON", { getters: true });
         customerSchema.pre<IcustomerSchema>('save', function(next) {
             const customer = this;
             if(!this.isModified('password')) return next();
@@ -39,7 +40,13 @@ class customerModel{
         customerSchema.methods.comparePassword = function(password:any) {
             return bcrypt.compareSync(password, this.password);
         }
+
+        customerSchema.virtual('fullName').get(function (this:IcustomerSchema) {
+            return this.firstName + ' ' + this.lastName;
+        });
+
         this._model = model<IcustomerSchema>('customers', customerSchema);
+        
         
     }
 

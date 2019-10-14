@@ -19,8 +19,10 @@ class OrderModel{
                 shipCost: { type: Number},
                 shipDate: { type: Date }
             },
-            description: { type: Schema.Types.Mixed }
+            description: { type: Schema.Types.Mixed },
+            discount: {type: Number}
         });
+
         this._model = model<IOrderSchema>('orders', OrderSchema);        
     }
 

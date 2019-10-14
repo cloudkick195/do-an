@@ -90,18 +90,6 @@ class productController{
         }
 
     }
-    
-    private __trimKeyword(keyword: string) {
-        let search = keyword;
-        //remove space in head and tail
-        search = search.trim();
-        //relace mutiple space -> |
-        search = search.replace(/ /gi, "|");
-        search = search.replace(/\|\|\|/gi, '|');
-        search = search.replace(/\|\|/gi, '|');
-
-        return search;
-    }
 
     public getListProduct = async (req: any, res: Response): Promise<any> =>{
         try {
@@ -109,11 +97,12 @@ class productController{
             let page = parseInt(query.page) || 1;
             let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
             let offset = (page * limit) - limit;
-            let keyword: string = query.q || null;
+            let keyword: string = query.s || null;
             let s = {};
+            
             if(keyword) {
-                keyword = this.__trimKeyword(keyword);
-                s = { userName: new RegExp('('+ keyword +')', "i") };
+                keyword = slugHelper.__trimKeyword(keyword);
+                s = { title: new RegExp('('+ keyword +')', "i") };
             }
 
             const products = productModel.find(s).skip(offset).limit(limit).sort({ _id: -1 }).populate('categoryId');

@@ -12,6 +12,7 @@ interface Attribute{
 interface IProduct{
     title: string;
     content?: string;
+    excerpt?: string;
     categoryId: Schema.Types.ObjectId,
     image?: string,
     userId: Schema.Types.ObjectId,

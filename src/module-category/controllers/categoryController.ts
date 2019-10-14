@@ -98,7 +98,7 @@ class CategoryController{
             // Check empty keyword
             if(keyword) {
                 keyword = this.__trimKeyword(keyword);
-                s = { userName: new RegExp('('+ keyword +')', "i") };
+                s = { title: new RegExp('('+ keyword +')', "i") };
             }
             const categorys = categoryModel.find(s).skip(offset).limit(limit).sort({ _id: -1 });
             const count = categoryModel.count(s);

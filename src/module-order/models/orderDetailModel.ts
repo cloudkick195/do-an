@@ -16,7 +16,6 @@ declare interface IOrderDetailSchema extends Document{
     productId: Schema.Types.ObjectId;
     orderId: Schema.Types.ObjectId;
     qty: number;
-    discount?: number,
 }
 
 class OrderDetailModel{
@@ -26,9 +25,9 @@ class OrderDetailModel{
         const orderDetailSchema =  new Schema({
             productId: {type: Schema.Types.ObjectId, ref: 'products', required: true},  
             qty:{type: Number, required: true},
-            orderId: {type: Schema.Types.ObjectId, ref: 'orders' },
-            discount: {type: Number},
+            orderId: {type: Schema.Types.ObjectId, ref: 'orders' }
         });
+        
         this._model = model<IOrderDetailSchema>('orderDetail', orderDetailSchema);        
     }
 

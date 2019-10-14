@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import orderModel from '../models/OrderModel';
 import orderDetailModel from '../models/orderDetailModel';
 import orderValidator from './OrderValidator';
+import { Constants } from '../../common/constants/constants';
+import slugHelper from '../../includes/helper/slug-helper';
 import "dotenv/config";
 
 
@@ -41,7 +43,7 @@ class OrderController{
                     listOrders.push(listItem[item]);
                 });
                 
-                await orderDetailModel.insertMany(listOrders);  
+                orderDetailModel.insertMany(listOrders);  
                 return res.send({success: true, message: "Create Success" });
             }
         } catch (err) {
@@ -66,41 +68,22 @@ class OrderController{
     public getListOrder = async (req: any, res: Response): Promise<any> =>{
         try {
             const query = req.query;
-            let page = 1;
-            let limit = 25;
-            let s = {}
-            let orders;
-            let count;
-            if(query.s){
-                let search = query.s;
-                //remove space in head and tail
-                search = search.trim();
-                //relace mutiple space -> |
-                search = search.replace(/ /gi, "|");
-                search = search.replace(/\|\|\|/gi, '|');
-                search = search.replace(/\|\|/gi, '|');
-                
-                //find mutiple word
-                s = {title: new RegExp('('+search+')', "i")}
-                //((?!).)*?('+search+').*? => find cau trong doan, vd dinh nhat trong dinh nhat hoang
-            }
-            if(query.page){
-                page = query.page;
-            }
-            if(query.limit){
-                limit = +query.limit;
-            }
+            let page = parseInt(query.page) || 1;
+            let limit = parseInt(query.limit) || Constants.PARAMS.LIMIT;
+            let offset = (page * limit) - limit;
+            let keyword: string = query.s || null;
+            let s = {};
             
-            const offset = (page - 1) * limit
-            orders = orderModel.find(s).skip(offset).limit(limit).sort({ _id: -1 }).populate('productId').populate('orderId');
-            count = orderModel.count(s);
-            
-           const result = await Promise.all([orders, count]);
- 
-           if(result[0].length > 0){
-               return res.json({ success: true, orders: result[0], total: result[1]});
-           }
-           return res.json({ success: false, message: "Some error occurred while retrieving Order."});
+            if(keyword) {
+                keyword = slugHelper.__trimKeyword(keyword);
+                s = { customerId: new RegExp('('+ keyword +')', "i") };
+            }
+
+            const orders = orderModel.find(s).skip(offset).limit(limit).sort({ _id: -1 }).populate('customerId');
+            const count = orderModel.count(s);
+            const result = await Promise.all([orders, count]);
+
+            return res.json({ success: true, products: result[0], total: result[1]});
         } catch (err) {
             return res.json({ success: false, message: err.message});
         }

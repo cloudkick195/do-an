@@ -3,6 +3,18 @@ export default class SlugHelper {
         
     }
 
+    public static __trimKeyword(keyword: string) {
+        let search = keyword;
+        //remove space in head and tail
+        search = search.trim();
+        //relace mutiple space -> |
+        search = search.replace(/ /gi, "|");
+        search = search.replace(/\|\|\|/gi, '|');
+        search = search.replace(/\|\|/gi, '|');
+
+        return search;
+    }
+
     public static ChangeToSlug(title:string)
     {
         let slug = '';

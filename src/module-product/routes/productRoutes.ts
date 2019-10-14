@@ -12,7 +12,7 @@ class ProductRoutes{
     config():void{
         
         this.configProduct();
-        this.router.use(authMiddlware);
+        //this.router.use(authMiddlware);
         this.configManager();
     }
 

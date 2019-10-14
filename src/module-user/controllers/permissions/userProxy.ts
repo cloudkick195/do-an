@@ -247,7 +247,7 @@ class UserProxy {
                 return res.send({ success: false, message: 'Permission denied' });
             }
 
-            const validateArray = userValidator.validateParamsArray({ userName, firstName, lastName, password, confirmPassword, email, birthDay, gender });
+            const validateArray = userValidator.validateParamsArray({ userName, firstName, lastName, email, birthDay, gender });
                     if(validateArray.length > 0) {
                         res.send({ success: false, message:  validateArray});
                     }else{
@@ -262,7 +262,7 @@ class UserProxy {
                         }else{
                             editUser.firstName = firstName;
                             editUser.lastName = lastName;
-                            editUser.password = password;
+                           
                             editUser.email = email;
                             editUser.birthDay = birthDay;
                             editUser.gender = gender;
@@ -272,7 +272,9 @@ class UserProxy {
                                 editUser.permission = permission;
                                 permissionMsg = '';
                             }
-                            
+                            if( password){
+                                editUser.password = password
+                            }
                             await editUser.save();
                             return res.send({success: true, message: "Update Success" + permissionMsg});
                         } 

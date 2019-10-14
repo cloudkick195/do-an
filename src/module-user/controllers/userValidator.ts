@@ -9,6 +9,7 @@ class  UserValidator{
             'emailRequired': 'The Email is missing',
             'loginUserRequired': 'No Username or Email provided',
             'passwordRequired': 'The Password is missing',
+            'confirmPasswordRequired': 'The Confirm Password is missing',
             'birthDayRequired': 'BirthDay is missing',
             'genderRequired': 'Gender is missing',
         }

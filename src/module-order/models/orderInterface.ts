@@ -20,7 +20,8 @@ interface IOrder{
         shipCost: number,
         shipDate: Date
     },
-    status:status
+    status:status,
+    discount?: number
 }
 
 export default IOrder;
