@@ -17,7 +17,7 @@ class productController{
     private secret:string = 'cloudkick';
     
     public createProduct = async (req: any, res:  Response): Promise<any> => {
-        const {title, slug, image, content, categoryId, price, priceSale, inventory, attribute} = req.body;
+        const {title, slug, image, content, excerpt, categoryId, price, priceSale, inventory, attribute} = req.body;
         const userId = req.user._id;
         
         try {
@@ -36,6 +36,7 @@ class productController{
                     title:  title,
                     slug: slugConvert,
                     content: content,
+                    excerpt: excerpt,
                     categoryId: categoryId,
                     userId: userId,
                     image: image,
@@ -117,7 +118,7 @@ class productController{
     
     public putProduct = async (req: any, res: Response): Promise<any> =>{
         try {
-            const {title, slug, content, categoryId, image, price, priceSale, inventory, attribute} = req.body;
+            const {title, slug, content, excerpt, categoryId, image, price, priceSale, inventory, attribute} = req.body;
             const userId = req.user._id;
             const product = await productModel.findById(req.params.id);
             
@@ -135,6 +136,7 @@ class productController{
                     product.title =  title;
                     product.slug = slugConvert;
                     product.content = content;
+                    product.excerpt = excerpt;
                     product.categoryId = categoryId;
                     product.userId = userId;
                     product.image = image;  
