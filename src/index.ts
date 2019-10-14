@@ -42,7 +42,7 @@ class Server{
     private connectDB():void{
         //mongodb://root:123456qq@ds233288.mlab.com:33288/anhhoang
         //mongodb://localhost:27017/kingbuild
-        mongoose.connect(`mongodb://localhost:27017/kingbuild`)
+        mongoose.connect(`mongodb://root:123456qq@ds233288.mlab.com:33288/anhhoang`)
        .then(() => {
             console.error('Database connection success');
        })

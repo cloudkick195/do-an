@@ -53,8 +53,7 @@ class OrderController{
 
     public getOrderById = async (req: any, res: Response): Promise<any> =>{
         try {
-            const order = await orderDetailModel.findOne({orderId: req.params.id}).populate('productId').populate('orderId');
-            
+            const order = await orderDetailModel.findOne({orderId: req.params.id}).populate('productId').populate('orderId').populate('customerId');
             if(order){
                 return res.send({success: true, Order: order }); 
             }
@@ -93,22 +92,22 @@ class OrderController{
         try {
             const {customerId, description, shipping, status, orderDetail} = req.body;
             
-                const validateArray = orderValidator.validateParamsArray({ status, orderDetail });
-                if(validateArray.length > 0) {
-                    return res.send({ success: false, message:  validateArray});
-                }else{
+                // // const validateArray = orderValidator.validateParamsArray({ status, orderDetail });
+                // if(validateArray.length > 0) {
+                //     return res.send({ success: false, message:  validateArray});
+                // }else{
                     let ordermodel = await orderModel.findById(req.params.id);
                    
                     if(ordermodel){
-                        ordermodel.shipping = shipping;
-                        ordermodel.description = description;
+                        // ordermodel.shipping = shipping;
+                        // ordermodel.description = description;
                         ordermodel.status = status;
                    
                         ordermodel.save();
                         return res.send({success: true, message: "Update Success" });
                     }
                     return res.send({success: false, message: "Update failed" });
-                }
+                // }
             
         } catch (err) {
             return res.send({success: false, message: err.message });
